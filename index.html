@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskFlow - Task Management</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    
+</head>
+<body>
+    <div class="toggle-container">
+        <span class="toggle-label">🌙</span>
+        <label class="toggle-switch">
+            <input type="checkbox" id="themeToggle" checked onchange="handleThemeToggle()">
+            <span class="slider">
+                <i class="fas fa-moon"></i>
+                <i class="fas fa-sun"></i>
+            </span>
+        </label>
+        <span class="toggle-label">☀️</span>
+    </div>
+
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-tasks"></i>
+                </div>
+                <div>
+                    <h1>TaskFlow</h1>
+                    <div class="welcome-text">Welcome back, User</div>
+                </div>
+            </div>
+            <div class="header-actions">
+        
+                <button class="btn btn-success" onclick="openModal('list')">
+                    <i class="fas fa-folder-plus"></i>
+                    New List
+                </button>
+                <button class="btn btn-primary" onclick="openModal('task')">
+                    <i class="fas fa-plus"></i>
+                    Add Task
+                </button>
+                
+            </div>
+        </header>
+
+        <div class="controls">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Search tasks and lists..." id="searchInput" oninput="filterContent()">
+            </div>
+            <div class="filter-controls">
+                <div class="dropdown" id="statusFilter">
+                    <div class="dropdown-btn" onclick="toggleDropdown('statusFilter')">
+                        <span id="statusFilterText">All Tasks</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="dropdown-content">
+                        <div class="dropdown-item active" onclick="setFilter('status', 'all', 'All Tasks')">All Tasks</div>
+                        <div class="dropdown-item" onclick="setFilter('status', 'pending', 'Pending')">Pending</div>
+                        <div class="dropdown-item" onclick="setFilter('status', 'completed', 'Completed')">Completed</div>
+                    </div>
+                </div>
+                <div class="dropdown" id="sortFilter">
+                    <div class="dropdown-btn" onclick="toggleDropdown('sortFilter')">
+                        <span id="sortFilterText">Recently Added</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="dropdown-content">
+                        <div class="dropdown-item active" onclick="setFilter('sort', 'recent', 'Recently Added')">Recently Added</div>
+                        <div class="dropdown-item" onclick="setFilter('sort', 'date', 'Due Date')">Due Date</div>
+                        <div class="dropdown-item" onclick="setFilter('sort', 'priority', 'Priority')">Priority</div>
+                        <div class="dropdown-item" onclick="setFilter('sort', 'alphabetical', 'Alphabetical')">Alphabetical</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number total" id="totalTasks">0</div>
+                <div class="stat-label">Total Tasks</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number pending" id="pendingTasks">0</div>
+                <div class="stat-label">Pending</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number completed" id="completedTasks">0</div>
+                <div class="stat-label">Completed</div>
+            </div>
+        </div>
+
+        <div id="contentContainer">
+            <div class="empty-state" id="emptyState">
+                <div class="empty-icon">
+                    <i class="fas fa-folder-open"></i>
+                </div>
+                <div class="empty-message">No lists yet. Create your first list to get started!</div>
+                <div class="empty-submessage">Click "New List" to create your first list</div>
+            </div>
+            <div class="lists-container" id="listsContainer"></div>
+        </div>
+    </div>
+
+    <!-- List Modal -->
+    <div class="modal" id="listModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="listModalTitle">Create New List</h2>
+                <button class="close-btn" onclick="closeModal('list')">&times;</button>
+            </div>
+            <form id="listForm">
+                <div class="form-group">
+                    <label class="form-label">List Name</label>
+                    <input type="text" class="form-control" id="listName" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" id="listDescription"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Color Theme</label>
+                    <select class="form-control" id="listColor">
+                        <option value="#667eea">Blue</option>
+                        <option value="#27ae60">Green</option>
+                        <option value="#f39c12">Orange</option>
+                        <option value="#e74c3c">Red</option>
+                        <option value="#9b59b6">Purple</option>
+                        <option value="#34495e">Gray</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('list')">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="saveListBtn">Create List</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Task Modal -->
+    <div class="modal" id="taskModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="taskModalTitle">Add New Task</h2>
+                <button class="close-btn" onclick="closeModal('task')">&times;</button>
+            </div>
+            <form id="taskForm">
+                <div class="form-group">
+                    <label class="form-label">Select List</label>
+                    <select class="form-control" id="taskList" required>
+                        <option value="">Choose a list...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Task Title</label>
+                    <input type="text" class="form-control" id="taskTitle" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" id="taskDescription"></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Due Date</label>
+                        <input type="date" class="form-control" id="taskDate">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Due Time</label>
+                        <input type="time" class="form-control" id="taskTime">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Priority</label>
+                    <select class="form-control" id="taskPriority">
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('task')">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="saveTaskBtn">Add Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
